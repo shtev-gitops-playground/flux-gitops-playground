@@ -1,0 +1,16 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+backend.hcl
+terraform.tfvars
+*.auto.tfvars
+
+# Credentials never belong here
+*.kubeconfig
+.env*
+
+# Local tooling
+.superpowers/
+.DS_Store
