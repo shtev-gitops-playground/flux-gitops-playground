@@ -60,6 +60,7 @@ jobs:
         run: |
           scripts/test/tenant-paths.test.sh
           scripts/test/release-tag.test.sh
+          scripts/test/new-tenant.test.sh
       - name: Demo app tests
         working-directory: apps/demo-app
         run: go test ./...
