@@ -28,7 +28,7 @@ If you've been invited, you get:
 **Deploying.** Flux pulls this repo and makes the cluster match it:
 
 ```mermaid
-flowchart LR
+flowchart TB
   repo[(this repo)] -- "pulled every minute" --> src[source-controller]
   src -- "files at the latest commit" --> kust[kustomize-controller]
   kust -- "applies" --> ns[your namespace]
@@ -37,7 +37,7 @@ flowchart LR
 **Releasing.** A new image tag turns into a Git commit, and then the loop above deploys it:
 
 ```mermaid
-flowchart LR
+flowchart TB
   btn[release button] -- "pushes you-1.2.3" --> ghcr[(GHCR)]
   ghcr -- "tags listed" --> refl[image-reflector-controller]
   refl -- "your ImagePolicy picks one" --> auto[image-automation-controller]
@@ -47,7 +47,7 @@ flowchart LR
 **Logging in.** Your GitHub account becomes a Kubernetes user:
 
 ```mermaid
-flowchart LR
+flowchart TB
   you((you)) -- "kubectl" --> kl[kubelogin]
   kl -- "opens" --> dex[Dex]
   dex -- "checks your team" --> gh[GitHub]
