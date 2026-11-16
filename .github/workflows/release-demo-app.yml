@@ -1,0 +1,73 @@
+# The "release" button: Actions → release-demo-app → Run workflow → enter a version like 1.2.3.
+# Publishes ghcr.io/shtev-gitops-playground/demo-app:<your-login>-<version>; Flux's image
+# automation then notices the new tag and rolls it out to your namespace only.
+name: release-demo-app
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.2.3"
+        required: true
+        type: string
+
+# No packages: write here. Pushing uses a token that only the "release" environment holds,
+# and that environment only runs from main, so a modified copy of this file on a branch can't push.
+permissions:
+  contents: read
+
+concurrency: release-${{ github.actor }}
+
+env:
+  IMAGE: ghcr.io/shtev-gitops-playground/demo-app
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Work out the tag
+        id: tag
+        # Inputs go in via env, never pasted into the script, so they can't inject commands.
+        env:
+          ACTOR: ${{ github.actor }}
+          VERSION: ${{ inputs.version }}
+        run: echo "tag=$(scripts/release-tag.sh "$ACTOR" "$VERSION")" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ vars.GHCR_PUSH_USER }}
+          password: ${{ secrets.GHCR_PUSH_TOKEN }}
+
+      - name: Refuse to overwrite an existing release
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if docker manifest inspect "$IMAGE:$TAG" >/dev/null 2>&1; then
+            echo "::error::$IMAGE:$TAG already exists. Pick a new version."
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: apps/demo-app
+          push: true
+          tags: ${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+          build-args: VERSION=${{ inputs.version }}
+          labels: |
+            org.opencontainers.image.version=${{ inputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Summary
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          {
+            echo "### Released \`$IMAGE:$TAG\`"
+            echo "Watch Flux pick it up: \`kubectl get imagepolicies -n flux-system\`"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -7,3 +7,5 @@ GITHUB_TOKEN=$(op read "op://Projects/GitOps Playground GitHub Terraform Token/c
 TF_VAR_github_oauth_client_id=$(op read "op://Projects/GitOps Playground GitHub OAuth/client ID")
 TF_VAR_github_oauth_client_secret=$(op read "op://Projects/GitOps Playground GitHub OAuth/secret")
 export HCLOUD_TOKEN GITHUB_TOKEN TF_VAR_github_oauth_client_id TF_VAR_github_oauth_client_secret
+TF_VAR_ghcr_push_token=$(op read "op://Projects/GitOps Playground GHCR Push Token/credential" 2>/dev/null || true)
+export TF_VAR_ghcr_push_token
