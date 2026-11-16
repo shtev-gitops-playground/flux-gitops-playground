@@ -1,0 +1,40 @@
+#cloud-config
+# Single-node k3s. Runs once, on first boot.
+write_files:
+  # Who the API server trusts besides its own certificates: tokens issued by Dex.
+  # Dex doesn't exist yet at first boot; the API server starts anyway and checks again later.
+  - path: /etc/rancher/k3s/authn.yaml
+    permissions: "0600"
+    content: |
+      apiVersion: apiserver.config.k8s.io/v1
+      kind: AuthenticationConfiguration
+      # Supplying this file stops k3s from disabling anonymous access itself, so do it here.
+      anonymous:
+        enabled: false
+      jwt:
+        - issuer:
+            url: ${issuer}
+            audiences: [kubernetes]
+          claimValidationRules:
+            # Dex already refuses anyone outside the team; this is a second lock on the same door.
+            - expression: "has(claims.groups) && 'shtev-gitops-playground:players' in claims.groups"
+              message: "not a member of shtev-gitops-playground/players"
+          claimMappings:
+            username:
+              claim: preferred_username
+              prefix: "github:"
+            groups:
+              claim: groups
+              prefix: "github:"
+          userValidationRules:
+            - expression: "!user.username.startsWith('system:')"
+              message: "username cannot use the reserved system: prefix"
+
+runcmd:
+  - >-
+    curl -sfL https://get.k3s.io |
+    INSTALL_K3S_VERSION='${k3s_version}'
+    sh -s - server
+    --tls-san ${api_host}
+    --kube-apiserver-arg=authentication-config=/etc/rancher/k3s/authn.yaml
+    --write-kubeconfig-mode 0600
