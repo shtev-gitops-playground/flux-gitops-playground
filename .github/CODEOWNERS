@@ -1,0 +1,7 @@
+# Changes need a review from the owner of the files they touch.
+# Everything is Steve's by default, so platform changes need his review...
+*           @sHtev
+
+# ...except tenants/, which has no owner, so PRs that only touch your own tenants/<you>/ folder
+# merge without review. The tenant-paths check stops you touching anyone else's folder.
+/tenants/
