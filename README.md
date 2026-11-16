@@ -25,37 +25,34 @@ If you've been invited, you get:
 
 ## How it fits together
 
+**Deploying.** Flux pulls this repo and makes the cluster match it:
+
 ```mermaid
 flowchart LR
-  subgraph GitHub
-    repo[(this repo)]
-    actions[release-demo-app<br/>workflow]
-    ghcr[(GHCR<br/>demo-app images)]
-  end
+  repo[(this repo)] -- "pulled every minute" --> src[source-controller]
+  src -- "files at the latest commit" --> kust[kustomize-controller]
+  kust -- "applies" --> ns[your namespace]
+```
 
-  subgraph cluster[k3s cluster]
-    src[source-controller]
-    kust[kustomize-controller]
-    helm[helm-controller]
-    refl[image-reflector-controller]
-    auto[image-automation-controller]
-    dex[Dex]
-    api[API server]
-    apps[your namespace<br/>demo-app]
-  end
+**Releasing.** A new image tag turns into a Git commit, and then the loop above deploys it:
 
-  you((you))
+```mermaid
+flowchart LR
+  btn[release button] -- "pushes you-1.2.3" --> ghcr[(GHCR)]
+  ghcr -- "tags listed" --> refl[image-reflector-controller]
+  refl -- "your ImagePolicy picks one" --> auto[image-automation-controller]
+  auto -- "commits the new tag" --> repo[(this repo)]
+```
 
-  repo -- "git pull every minute" --> src
-  src --> kust & helm
-  kust -- "apply manifests" --> apps
-  actions -- "push you-1.2.3" --> ghcr
-  ghcr -- "scan tags" --> refl
-  refl -- "ImagePolicy picks newest" --> auto
-  auto -- "commit new tag" --> repo
-  you -- "kubectl" --> api
-  you -- "log in with GitHub" --> dex
-  dex -- "token" --> api
+**Logging in.** Your GitHub account becomes a Kubernetes user:
+
+```mermaid
+flowchart LR
+  you((you)) -- "kubectl" --> kl[kubelogin]
+  kl -- "opens" --> dex[Dex]
+  dex -- "checks your team" --> gh[GitHub]
+  kl -- "sends the token Dex signed" --> api[API server]
+  api -- "RBAC" --> perms[read everything,<br/>change play-you]
 ```
 
 - **Terraform** (`infra/`) builds what Flux needs to exist first: the server, DNS, the GitHub repo
