@@ -18,7 +18,7 @@ spec:
         - name: demo-app
           # The comment below is a marker: Flux's image automation rewrites this line when your
           # ImagePolicy picks a newer tag, then commits the change to Git.
-          image: ghcr.io/shtev-gitops-playground/demo-app:shtev-1.1.0 # {"$imagepolicy": "flux-system:shtev-demo-app"}
+          image: ghcr.io/shtev-gitops-playground/demo-app:shtev-1.1.1 # {"$imagepolicy": "flux-system:shtev-demo-app"}
           ports:
             - name: http
               containerPort: 8080
