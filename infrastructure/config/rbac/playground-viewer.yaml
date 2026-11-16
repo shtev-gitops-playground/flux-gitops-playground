@@ -1,0 +1,49 @@
+# Everyone in the GitHub team shtev-gitops-playground/players can look around the whole cluster.
+# Read-only, and deliberately no Secrets: write access comes only from your own play-<you> namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: playground-viewer
+rules:
+  - apiGroups: [""]
+    resources: [namespaces, nodes, pods, pods/log, services, endpoints, configmaps, events,
+                serviceaccounts, persistentvolumeclaims]
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [deployments, replicasets, statefulsets, daemonsets]
+    verbs: [get, list, watch]
+  - apiGroups: [batch]
+    resources: [jobs, cronjobs]
+    verbs: [get, list, watch]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [get, list, watch]
+  - apiGroups: [events.k8s.io]
+    resources: [events]
+    verbs: [get, list, watch]
+  # All of Flux's own objects: sources, Kustomizations, HelmReleases, alerts, image automation.
+  - apiGroups:
+      - source.toolkit.fluxcd.io
+      - kustomize.toolkit.fluxcd.io
+      - helm.toolkit.fluxcd.io
+      - notification.toolkit.fluxcd.io
+      - image.toolkit.fluxcd.io
+    resources: ["*"]
+    verbs: [get, list, watch]
+  # Certificates, so you can see why your HTTPS isn't ready yet.
+  - apiGroups: [cert-manager.io, acme.cert-manager.io]
+    resources: ["*"]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: playground-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: playground-viewer
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: github:shtev-gitops-playground:players
