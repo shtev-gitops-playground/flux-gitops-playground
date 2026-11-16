@@ -1,0 +1,6 @@
+flowchart LR
+  you((you)) -- "kubectl" --> kl[kubelogin]
+  kl -- "opens" --> dex[Dex]
+  dex -- "checks your team" --> gh[GitHub]
+  kl -- "sends the token Dex signed" --> api[API server]
+  api -- "RBAC" --> perms[read everything,<br/>change play-you]

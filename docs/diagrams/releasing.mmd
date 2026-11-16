@@ -1,0 +1,5 @@
+flowchart LR
+  btn[release button] -- "pushes you-1.2.3" --> ghcr[(GHCR)]
+  ghcr -- "tags listed" --> refl[image-reflector-controller]
+  refl -- "your ImagePolicy picks one" --> auto[image-automation-controller]
+  auto -- "commits the new tag" --> repo[(this repo)]

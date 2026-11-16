@@ -113,3 +113,5 @@ scripts/test/install-tools.test.sh     # needs Docker
 3. `infra/github`: the repo has `prevent_destroy`. Archive it in the GitHub UI instead, or remove
    the lifecycle block first if you really mean it.
 4. `infra/bootstrap`: only if you're done for good. Empty the bucket first.
+
+Diagram sources are `docs/diagrams/*.mmd`; after editing one, run `scripts/render-diagrams.sh` (needs Docker) and commit the SVGs.

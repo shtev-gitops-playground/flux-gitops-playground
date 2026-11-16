@@ -1,0 +1,4 @@
+flowchart LR
+  repo[(this repo)] -- "pulled every minute" --> src[source-controller]
+  src -- "files at the latest commit" --> kust[kustomize-controller]
+  kust -- "applies" --> ns[your namespace]

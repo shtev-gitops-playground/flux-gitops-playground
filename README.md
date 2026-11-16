@@ -27,33 +27,24 @@ If you've been invited, you get:
 
 **Deploying.** Flux pulls this repo and makes the cluster match it:
 
-```mermaid
-flowchart TB
-  repo[(this repo)] -- "pulled every minute" --> src[source-controller]
-  src -- "files at the latest commit" --> kust[kustomize-controller]
-  kust -- "applies" --> ns[your namespace]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/deploying-dark.svg">
+  <img alt="Flux pulls this repo with source-controller; kustomize-controller applies it to your namespace" src="docs/diagrams/deploying.svg">
+</picture>
 
 **Releasing.** A new image tag turns into a Git commit, and then the loop above deploys it:
 
-```mermaid
-flowchart TB
-  btn[release button] -- "pushes you-1.2.3" --> ghcr[(GHCR)]
-  ghcr -- "tags listed" --> refl[image-reflector-controller]
-  refl -- "your ImagePolicy picks one" --> auto[image-automation-controller]
-  auto -- "commits the new tag" --> repo[(this repo)]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/releasing-dark.svg">
+  <img alt="The release button pushes an image to GHCR; image-reflector-controller lists tags, your ImagePolicy picks one, image-automation-controller commits it to this repo" src="docs/diagrams/releasing.svg">
+</picture>
 
 **Logging in.** Your GitHub account becomes a Kubernetes user:
 
-```mermaid
-flowchart TB
-  you((you)) -- "kubectl" --> kl[kubelogin]
-  kl -- "opens" --> dex[Dex]
-  dex -- "checks your team" --> gh[GitHub]
-  kl -- "sends the token Dex signed" --> api[API server]
-  api -- "RBAC" --> perms[read everything,<br/>change play-you]
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/logging-in-dark.svg">
+  <img alt="kubectl runs kubelogin, which opens Dex; Dex checks your GitHub team; kubelogin sends the signed token to the API server, where RBAC decides what you can do" src="docs/diagrams/logging-in.svg">
+</picture>
 
 - **Terraform** (`infra/`) builds what Flux needs to exist first: the server, DNS, the GitHub repo
   and its rules, and Flux itself.
