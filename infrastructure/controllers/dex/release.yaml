@@ -77,7 +77,8 @@ spec:
             - http://localhost:8000
             - http://localhost:18000
             # Where Dex sends you after a code-based login (--grant-type=device-code).
-            - https://dex.gitops.shtev.dev/device/callback
+            # Dex matches this literally, as a path relative to the issuer.
+            - /device/callback
     ingress:
       enabled: true
       className: traefik
