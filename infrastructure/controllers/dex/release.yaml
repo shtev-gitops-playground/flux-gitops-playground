@@ -76,6 +76,8 @@ spec:
           redirectURIs:
             - http://localhost:8000
             - http://localhost:18000
+            # Where Dex sends you after a code-based login (--grant-type=device-code).
+            - https://dex.gitops.shtev.dev/device/callback
     ingress:
       enabled: true
       className: traefik
