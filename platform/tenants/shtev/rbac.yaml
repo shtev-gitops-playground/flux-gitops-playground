@@ -1,0 +1,57 @@
+# What Flux may do on your behalf: anything inside play-shtev, nothing outside it.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flux-tenant
+  namespace: play-shtev
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: flux-tenant
+  namespace: play-shtev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: ServiceAccount
+    name: flux-tenant
+    namespace: play-shtev
+---
+# What you may do yourself with kubectl: the same, in your own namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: player
+  namespace: play-shtev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: github:sHtev
+---
+# Your image policy lives next to the image automation in flux-system; this account can only
+# manage ImagePolicies there (Role tenant-image-editor, infrastructure/config/rbac).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tenant-images-shtev
+  namespace: flux-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tenant-images-shtev
+  namespace: flux-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tenant-image-editor
+subjects:
+  - kind: ServiceAccount
+    name: tenant-images-shtev
+    namespace: flux-system

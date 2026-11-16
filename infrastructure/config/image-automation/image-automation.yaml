@@ -1,0 +1,41 @@
+# Watches the registry for demo-app tags. Every player's ImagePolicy picks from this list.
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: demo-app
+  namespace: flux-system
+spec:
+  image: ghcr.io/shtev-gitops-playground/demo-app
+  interval: 1m
+---
+# When an ImagePolicy's choice changes, rewrite the marked image lines under tenants/ and commit
+# to main (Flux's deploy key is allowed past the PR rules for this).
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: tenants
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: fluxcdbot@users.noreply.github.com
+      messageTemplate: |
+        chore(images): roll out new demo-app tags
+
+        {{ range .Changed.Changes -}}
+        - {{ .OldValue }} -> {{ .NewValue }}
+        {{ end -}}
+    push:
+      branch: main
+  update:
+    path: ./tenants
+    strategy: Setters

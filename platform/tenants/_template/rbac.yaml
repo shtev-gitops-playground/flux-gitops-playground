@@ -1,0 +1,57 @@
+# What Flux may do on your behalf: anything inside play-__LC__, nothing outside it.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flux-tenant
+  namespace: play-__LC__
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: flux-tenant
+  namespace: play-__LC__
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: ServiceAccount
+    name: flux-tenant
+    namespace: play-__LC__
+---
+# What you may do yourself with kubectl: the same, in your own namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: player
+  namespace: play-__LC__
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: github:__LOGIN__
+---
+# Your image policy lives next to the image automation in flux-system; this account can only
+# manage ImagePolicies there (Role tenant-image-editor, infrastructure/config/rbac).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tenant-images-__LC__
+  namespace: flux-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tenant-images-__LC__
+  namespace: flux-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tenant-image-editor
+subjects:
+  - kind: ServiceAccount
+    name: tenant-images-__LC__
+    namespace: flux-system

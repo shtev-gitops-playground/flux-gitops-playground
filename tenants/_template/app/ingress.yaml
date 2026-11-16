@@ -1,0 +1,22 @@
+# https://__LC__.gitops.shtev.dev, with a certificate from Let's Encrypt.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-app
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: __LC__.gitops.shtev.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: demo-app
+                port: { name: http }
+  tls:
+    - hosts: [__LC__.gitops.shtev.dev]
+      secretName: demo-app-tls

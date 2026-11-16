@@ -1,0 +1,50 @@
+# Your own copy of the repo, read anonymously over HTTPS (it's public) and trimmed to your folder.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: playground
+  namespace: play-__LC__
+spec:
+  interval: 1m
+  url: https://github.com/shtev-gitops-playground/flux-gitops-playground
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/tenants/__LC__/app/
+---
+# Applies tenants/__LC__/app into play-__LC__, acting as flux-tenant, so it can't reach anything else.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: app
+  namespace: play-__LC__
+spec:
+  serviceAccountName: flux-tenant
+  interval: 5m
+  retryInterval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: playground
+  path: ./tenants/__LC__/app
+  targetNamespace: play-__LC__
+  prune: true
+  wait: true
+  timeout: 3m
+---
+# Applies tenants/__LC__/images into flux-system, acting as an account that can only touch ImagePolicies.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: __LC__-images
+  namespace: flux-system
+spec:
+  serviceAccountName: tenant-images-__LC__
+  interval: 5m
+  retryInterval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./tenants/__LC__/images
+  targetNamespace: flux-system
+  prune: true

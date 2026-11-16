@@ -1,0 +1,5 @@
+# One entry per player; scripts/new-tenant.sh adds to this list.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - shtev

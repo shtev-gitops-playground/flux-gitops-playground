@@ -1,0 +1,8 @@
+# Everything in this folder is applied into your namespace, play-__LC__. Add your own files here
+# and list them below.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml

@@ -1,0 +1,34 @@
+# In a player's namespace, an Ingress may only claim that player's own hostname,
+# so nobody can take over someone else's <name>.gitops.shtev.dev.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: tenant-ingress-hosts
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [networking.k8s.io]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [ingresses]
+    namespaceSelector:
+      matchExpressions:
+        - key: playground.shtev.dev/tenant
+          operator: Exists
+  variables:
+    - name: host
+      expression: "namespaceObject.metadata.labels['playground.shtev.dev/tenant'] + '.gitops.shtev.dev'"
+  validations:
+    - expression: "!has(object.spec.rules) || object.spec.rules.all(r, has(r.host) && r.host == variables.host)"
+      messageExpression: "'In this namespace, Ingress hosts must be exactly ' + variables.host"
+    - expression: "!has(object.spec.tls) || object.spec.tls.all(t, !has(t.hosts) || t.hosts.all(h, h == variables.host))"
+      messageExpression: "'In this namespace, TLS hosts must be exactly ' + variables.host"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: tenant-ingress-hosts
+spec:
+  policyName: tenant-ingress-hosts
+  validationActions: [Deny]
