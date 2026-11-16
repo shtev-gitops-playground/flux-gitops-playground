@@ -1,0 +1,34 @@
+# Gets TLS certificates from Let's Encrypt for any Ingress annotated with a ClusterIssuer.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: jetstack
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://charts.jetstack.io
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: flux-system
+spec:
+  # Lockdown: platform releases must name Flux's own service account.
+  serviceAccountName: helm-controller
+  interval: 1h
+  targetNamespace: cert-manager
+  releaseName: cert-manager
+  install:
+    createNamespace: true
+  chart:
+    spec:
+      chart: cert-manager
+      version: v1.21.3
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+  values:
+    crds:
+      enabled: true
+      keep: true

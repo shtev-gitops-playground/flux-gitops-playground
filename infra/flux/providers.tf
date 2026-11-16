@@ -16,3 +16,7 @@ provider "flux" {
     }
   }
 }
+
+provider "kubernetes" {
+  config_path = pathexpand(var.kubeconfig)
+}

@@ -1,0 +1,91 @@
+# Dex turns "logged in with GitHub" into a token the Kubernetes API server trusts.
+# The dex namespace and the github-oauth Secret are created by Terraform (infra/flux),
+# so the OAuth client secret never touches Git.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: dex
+  namespace: flux-system
+spec:
+  interval: 24h
+  url: https://charts.dexidp.io
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: dex
+  namespace: flux-system
+spec:
+  serviceAccountName: helm-controller
+  interval: 1h
+  targetNamespace: dex
+  releaseName: dex
+  chart:
+    spec:
+      chart: dex
+      version: 0.26.0
+      sourceRef:
+        kind: HelmRepository
+        name: dex
+  values:
+    envVars:
+      - name: GITHUB_CLIENT_ID
+        valueFrom:
+          secretKeyRef: { name: github-oauth, key: client-id }
+      - name: GITHUB_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef: { name: github-oauth, key: client-secret }
+    config:
+      # Must match the issuer in the API server's authentication config exactly.
+      issuer: https://dex.gitops.shtev.dev
+      storage:
+        type: kubernetes
+        config:
+          inCluster: true
+      oauth2:
+        skipApprovalScreen: true
+        grantTypes:
+          - authorization_code
+          - refresh_token
+          - urn:ietf:params:oauth:grant-type:device_code
+      expiry:
+        idTokens: 1h
+        refreshTokens:
+          validIfNotUsedFor: 168h
+      connectors:
+        - type: github
+          id: github
+          name: GitHub
+          config:
+            clientID: $GITHUB_CLIENT_ID
+            clientSecret: $GITHUB_CLIENT_SECRET
+            redirectURI: https://dex.gitops.shtev.dev/callback
+            # Only members of this team can log in at all. Their token's groups claim
+            # then reads "shtev-gitops-playground:players".
+            orgs:
+              - name: shtev-gitops-playground
+                teams: [players]
+            teamNameField: slug
+            # preferred_username = GitHub login, which becomes "github:<login>" in Kubernetes.
+            useLoginAsID: true
+      staticClients:
+        # kubectl's login plugin. Public: it runs on people's laptops, so it can't keep a secret.
+        - id: kubernetes
+          name: GitOps Playground
+          public: true
+          redirectURIs:
+            - http://localhost:8000
+            - http://localhost:18000
+    ingress:
+      enabled: true
+      className: traefik
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+      hosts:
+        - host: dex.gitops.shtev.dev
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: dex-tls
+          hosts: [dex.gitops.shtev.dev]
