@@ -41,7 +41,7 @@ flowchart LR
     auto[image-automation-controller]
     dex[Dex]
     api[API server]
-    apps[play-&lt;you&gt;<br/>demo-app]
+    apps[your namespace<br/>demo-app]
   end
 
   you((you))
@@ -49,7 +49,7 @@ flowchart LR
   repo -- "git pull every minute" --> src
   src --> kust & helm
   kust -- "apply manifests" --> apps
-  actions -- "push &lt;you&gt;-1.2.3" --> ghcr
+  actions -- "push you-1.2.3" --> ghcr
   ghcr -- "scan tags" --> refl
   refl -- "ImagePolicy picks newest" --> auto
   auto -- "commit new tag" --> repo

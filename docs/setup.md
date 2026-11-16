@@ -99,7 +99,7 @@ with GitHub, and the terminal carries on.
 | You see | Try |
 |---|---|
 | `unknown command "oidc-login"` | `~/.local/bin` isn't on your `PATH`. |
-| Dex says *"not in an allowed team"* or similar | You haven't accepted the org invite yet, or Steve hasn't added you to `players`. |
+| Dex says *"user … not in required orgs or teams"* | You haven't accepted the org invite yet, or Steve hasn't added you to `players`. |
 | `error: You must be logged in to the server (Unauthorized)` | Clear the cached login and try again: `rm -rf ~/.kube/cache/oidc-login` |
 | `Forbidden` on something in another namespace | That's expected. You can read most things but only change `play-<you>`. |
 | Anything else | Run the command again with `-v=6` to see what's happening, and ask Steve. |
