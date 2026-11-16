@@ -1,5 +1,5 @@
 # Which of your releases to run. Only tags starting "shtev-" are yours; the rest of the tag
-# is read as a version and the highest one in the range wins. Try range: "~1.1" to pin to 1.1.x.
+# is read as a version and the highest one in the range wins. Try range: ">=1.0.0" to pin to 1.1.x.
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImagePolicy
 metadata:
@@ -12,4 +12,4 @@ spec:
     extract: '$version'
   policy:
     semver:
-      range: "~1.1"
+      range: ">=1.0.0"
