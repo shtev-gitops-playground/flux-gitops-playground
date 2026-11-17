@@ -11,6 +11,18 @@ if [[ ! $login =~ ^[A-Za-z0-9][A-Za-z0-9-]{0,38}$ ]]; then
   echo "Not a GitHub login: '$login'" >&2
   exit 1
 fi
+
+# Logins are case-insensitive on GitHub, but the cluster's RBAC matches the exact spelling.
+api=${GITHUB_API:-https://api.github.com}
+canonical=$( (curl -fsS "$api/users/$login" 2>/dev/null || true) | sed -n 's/.*"login": *"\([^"]*\)".*/\1/p' | head -1)
+if [[ -z $canonical ]]; then
+  echo "GitHub has no user '$login'." >&2
+  exit 1
+fi
+if [[ $canonical != "$login" ]]; then
+  echo "GitHub spells it '$canonical'. Run again with exactly that." >&2
+  exit 1
+fi
 lc=$(tr '[:upper:]' '[:lower:]' <<<"$login")
 
 if [[ -e tenants/$lc || -e platform/tenants/$lc ]]; then

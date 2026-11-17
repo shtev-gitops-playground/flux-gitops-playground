@@ -20,6 +20,8 @@ spec:
     - name: host
       expression: "namespaceObject.metadata.labels['playground.shtev.dev/tenant'] + '.gitops.shtev.dev'"
   validations:
+    - expression: "!has(object.spec.defaultBackend)"
+      message: "In this namespace, an Ingress can't have a defaultBackend (it would catch every unknown hostname)"
     - expression: "!has(object.spec.rules) || object.spec.rules.all(r, has(r.host) && r.host == variables.host)"
       messageExpression: "'In this namespace, Ingress hosts must be exactly ' + variables.host"
     - expression: "!has(object.spec.tls) || object.spec.tls.all(t, !has(t.hosts) || t.hosts.all(h, h == variables.host))"

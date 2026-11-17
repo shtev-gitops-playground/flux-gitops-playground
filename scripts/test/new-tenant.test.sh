@@ -13,6 +13,17 @@ ok() { echo "ok    $1"; }
 fail() { echo "FAIL  $1"; failures=$((failures + 1)); }
 check() { if eval "$2"; then ok "$1"; else fail "$1"; fi; }
 
+# A stand-in for GitHub's API, which new-tenant.sh asks for the login's exact spelling.
+mkdir -p api/users
+echo '{"login": "JaneDoe", "id": 1}' >api/users/JaneDoe
+echo '{"login": "JaneDoe", "id": 1}' >api/users/janedoe
+export GITHUB_API="file://$work/api"
+
+check "wrong case is refused"                    "! scripts/new-tenant.sh janedoe >/dev/null 2>&1"
+check "...and creates nothing"                   "[[ ! -e tenants/janedoe ]]"
+if [[ $(scripts/new-tenant.sh NoSuchPerson 2>&1) == *"no user"* ]]; then ok "unknown login is refused, and says why"
+else fail "unknown login is refused, and says why"; fi
+
 scripts/new-tenant.sh JaneDoe >/dev/null 2>&1
 check "creates tenants/janedoe"                  "[[ -d tenants/janedoe/app && -d tenants/janedoe/images ]]"
 check "creates platform/tenants/janedoe"         "[[ -d platform/tenants/janedoe ]]"

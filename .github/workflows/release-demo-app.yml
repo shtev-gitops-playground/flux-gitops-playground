@@ -46,8 +46,12 @@ jobs:
         env:
           TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          if docker manifest inspect "$IMAGE:$TAG" >/dev/null 2>&1; then
+          # Only a clear "not found" counts as free; any other failure (network, registry) stops here.
+          if out=$(docker manifest inspect "$IMAGE:$TAG" 2>&1); then
             echo "::error::$IMAGE:$TAG already exists. Pick a new version."
+            exit 1
+          elif ! grep -qi "manifest unknown\|not found" <<<"$out"; then
+            echo "::error::Couldn't check whether $IMAGE:$TAG exists: $out"
             exit 1
           fi
 

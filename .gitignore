@@ -10,6 +10,7 @@ terraform.tfvars
 # Credentials never belong here
 *.kubeconfig
 .env*
+scripts/tf-env.local
 
 # Local tooling
 .superpowers/

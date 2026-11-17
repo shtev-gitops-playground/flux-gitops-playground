@@ -15,9 +15,10 @@ For whoever runs the playground. Players don't need any of this.
   | GitOps Playground GitHub OAuth | Dex's OAuth app (fields `client ID`, `secret`) |
   | GitOps Playground GHCR Push Token | The release workflow; classic token, `write:packages` only |
 
-- AWS access to the state bucket and the `shtev.dev` Route 53 zone (`aws sso login --profile shtev-admin`)
+- AWS access to the state bucket and the `shtev.dev` Route 53 zone (`aws sso login --profile <your-profile>`)
 
-Load everything for a Terraform session with:
+Put your AWS profile and 1Password account in `scripts/tf-env.local` (git-ignored; copy
+`scripts/tf-env.local.example`), then load everything for a Terraform session with:
 
 ```bash
 . scripts/tf-env.sh

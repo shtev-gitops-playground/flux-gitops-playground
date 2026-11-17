@@ -79,6 +79,12 @@ expect no  "edit things in someone else's"          -- create deployments -n pla
 echo "# Nobody can claim someone else's hostname"
 deny "Ingress for another player's host" create ingress hijack -n "play-$TENANT" \
   --rule="someoneelse.gitops.shtev.dev/*=demo-app:80" "${flux_tenant[@]}"
+deny "catch-all Ingress (defaultBackend, no rules)" create -f - "${flux_tenant[@]}" <<YAML
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: catchall, namespace: play-$TENANT }
+spec: { defaultBackend: { service: { name: demo-app, port: { number: 80 } } } }
+YAML
 if kubectl --kubeconfig "$KUBECONFIG_ADMIN" create ingress own -n "play-$TENANT" \
   --rule="$TENANT.gitops.shtev.dev/*=demo-app:80" --dry-run=server "${flux_tenant[@]}" >/dev/null 2>&1; then
   echo "ok    Ingress for own host"

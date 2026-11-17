@@ -1,0 +1,3 @@
+# Copy to scripts/tf-env.local (git-ignored) and fill in your own accounts.
+export AWS_PROFILE=your-aws-sso-profile
+export OP_ACCOUNT=your-account.1password.com

@@ -1,4 +1,4 @@
-# One-off: the S3 bucket that holds this project's Terraform state. Applied by hand (AWS_PROFILE=shtev-admin).
+# One-off: the S3 bucket that holds this project's Terraform state. Applied by hand, after `. scripts/tf-env.sh`.
 # The first apply ran with local state, then moved into the bucket it created (backend.tf, key bootstrap/).
 
 terraform {
