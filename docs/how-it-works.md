@@ -102,12 +102,20 @@ Your area is set up to work within that (`platform/tenants/<you>/`):
   your folder, because the lockdown stops it borrowing the one in `flux-system`.
 - Your `<you>-images` Kustomization applies your ImagePolicy into `flux-system`. It acts as an
   account that can **only** manage ImagePolicies (see "Image automation" for why it lives there).
-- A `ValidatingAdmissionPolicy` (`infrastructure/config/policies`) stops an Ingress in your namespace
-  claiming any hostname except `<you>.gitops.shtev.dev`.
+- `ValidatingAdmissionPolicies` (`infrastructure/config/policies`) stop an Ingress in your namespace
+  claiming any hostname except `<you>.gitops.shtev.dev`, keep your Services inside the cluster (no
+  LoadBalancer or NodePort, which would open ports on the server itself), and let your image sync
+  write only your own ImagePolicy.
+- **Pod Security** (`baseline`) refuses privileged pods and anything mounting the server's disk or
+  network. You'll also see warnings for the stricter `restricted` level; they're advice only.
+- A **ResourceQuota** and **LimitRange** (`fair-share`, `defaults`) give each area a fair slice of
+  one small server, and a **NetworkPolicy** (`isolate`) lets only your own pods and the ingress
+  controller reach yours. See them with `kubectl describe quota,limitrange,networkpolicy -n play-<you>`.
 
 On GitHub's side, PRs that only touch `tenants/<you>/` merge without review. A check called
-`tenant-paths` fails any PR that touches someone else's folder, and `CODEOWNERS` makes everything
-outside `tenants/` need Steve's review.
+`tenant-paths` fails any PR that touches someone else's folder, or that anyone but its author pushed
+to, and `CODEOWNERS` makes everything outside `tenants/` need Steve's review. Only GitHub Actions
+can report the required checks, so they can't be faked through the API.
 
 ## Image automation: from a new tag to a Git commit
 
