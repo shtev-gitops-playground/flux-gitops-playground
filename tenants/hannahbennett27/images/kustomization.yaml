@@ -1,0 +1,5 @@
+# Applied into flux-system, next to the image automation. Only ImagePolicies are allowed here.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - image-policy.yaml
