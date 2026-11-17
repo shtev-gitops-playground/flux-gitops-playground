@@ -6,6 +6,8 @@ set -euo pipefail
 KUBECONFIG_ADMIN=${KUBECONFIG_ADMIN:-$HOME/.kube/gitops-playground-admin}
 PLAYERS=github:shtev-gitops-playground:players
 failures=0
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
 
 # expect <yes|no> <description> -- <kubectl auth can-i args...>
 expect() {
@@ -83,6 +85,58 @@ if kubectl --kubeconfig "$KUBECONFIG_ADMIN" create ingress own -n "play-$TENANT"
 else
   echo "FAIL  Ingress for own host: was refused"; failures=$((failures + 1))
 fi
+
+echo "# Nothing that could reach the node itself"
+cat >"$tmpdir/privileged-pod.yaml" <<YAML
+apiVersion: v1
+kind: Pod
+metadata: { name: escape, namespace: play-$TENANT }
+spec:
+  hostPID: true
+  containers:
+    - name: c
+      image: busybox:1.37
+      securityContext: { privileged: true }
+      volumeMounts: [{ name: root, mountPath: /host }]
+  volumes: [{ name: root, hostPath: { path: / } }]
+YAML
+deny "privileged hostPath pod" apply -f "$tmpdir/privileged-pod.yaml" "${flux_tenant[@]}"
+deny "LoadBalancer Service (could take node ports)" create service loadbalancer grab -n "play-$TENANT" --tcp=6443:6443 "${flux_tenant[@]}"
+deny "NodePort Service" create service nodeport grab -n "play-$TENANT" --tcp=80:80 "${flux_tenant[@]}"
+
+deny "Service with externalIPs" create -f - "${flux_tenant[@]}" <<YAML
+apiVersion: v1
+kind: Service
+metadata: { name: grab, namespace: play-$TENANT }
+spec: { ports: [{ port: 80 }], externalIPs: [116.203.147.119] }
+YAML
+
+echo "# Nobody can grab the whole node's memory"
+deny "pod asking for 8Gi" run hog -n "play-$TENANT" --image=busybox:1.37 \
+  --overrides='{"spec":{"containers":[{"name":"hog","image":"busybox:1.37","resources":{"requests":{"memory":"8Gi"}}}]}}' \
+  "${flux_tenant[@]}"
+if kubectl --kubeconfig "$KUBECONFIG_ADMIN" get networkpolicy isolate -n "play-$TENANT" >/dev/null 2>&1; then
+  echo "ok    other players' pods can't reach yours (NetworkPolicy isolate)"
+else
+  echo "FAIL  no NetworkPolicy isolate in play-$TENANT"; failures=$((failures + 1))
+fi
+
+echo "# Tenant $TENANT's image sync can only write its own ImagePolicy"
+# shellcheck disable=SC2016 # $version is literal YAML
+policy() { # policy <name> <pattern>
+  printf 'apiVersion: image.toolkit.fluxcd.io/v1\nkind: ImagePolicy\nmetadata: { name: %s, namespace: flux-system }\nspec: { imageRepositoryRef: { name: demo-app }, filterTags: { pattern: "%s", extract: "$version" }, policy: { semver: { range: ">=1.0.0" } } }\n' "$1" "$2"
+}
+policy "$TENANT-demo-app" "^$TENANT-(?P<version>.+)\$" >"$tmpdir/own-policy.yaml"
+if kubectl --kubeconfig "$KUBECONFIG_ADMIN" apply --server-side --force-conflicts --dry-run=server -f "$tmpdir/own-policy.yaml" \
+  --field-manager=test "${images_sa[@]}" >/dev/null 2>&1; then
+  echo "ok    own ImagePolicy"
+else
+  echo "FAIL  own ImagePolicy: was refused"; failures=$((failures + 1))
+fi
+policy someoneelse-demo-app "^someoneelse-(?P<version>.+)\$" >"$tmpdir/other-policy.yaml"
+deny "ImagePolicy named for someone else" create -f "$tmpdir/other-policy.yaml" "${images_sa[@]}"
+policy "$TENANT-demo-app" "^someoneelse-(?P<version>.+)\$" >"$tmpdir/stolen-tags.yaml"
+deny "own ImagePolicy reading someone else's tags" apply --server-side --force-conflicts --field-manager=test -f "$tmpdir/stolen-tags.yaml" "${images_sa[@]}"
 
 if ((failures)); then
   echo "$failures check(s) failed"

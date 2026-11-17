@@ -31,6 +31,15 @@ check 1 "the shared template"            bob   "M${tab}tenants/_template/app/dep
 check 1 "own and someone else's"         bob   "M${tab}tenants/bob/x.yaml" "M${tab}tenants/alice/x.yaml"
 check 1 "a file directly in tenants/"    bob   "A${tab}tenants/README.md"
 check 0 "empty diff"                     bob   ""
+check 1 "unusual (quoted) file name"     bob   "A${tab}\"tenants/alice/\\303\\274.yaml\""
+
+# A push by someone other than the PR's author fails, even in the author's own folder.
+if printf 'M\ttenants/bob/x.yaml\n' | scripts/tenant-paths.sh bob mallory >/dev/null 2>&1; then
+  echo "FAIL  pushed by someone else: passed"; failures=$((failures + 1))
+else echo "ok    pushed by someone else"; fi
+if printf 'M\ttenants/bob/x.yaml\n' | scripts/tenant-paths.sh Bob bob >/dev/null 2>&1; then
+  echo "ok    pushed by the author (any case)"
+else echo "FAIL  pushed by the author: failed"; failures=$((failures + 1)); fi
 
 if ((failures)); then echo "$failures failure(s)"; exit 1; fi
 echo "all checks passed"

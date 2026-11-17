@@ -17,9 +17,11 @@ jobs:
       - name: Only your own tenants/ folder
         env:
           AUTHOR: ${{ github.event.pull_request.user.login }}
+          # Whoever triggered this run (opened the PR or pushed to it); stays the same on a re-run.
+          PUSHER: ${{ github.actor }}
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
-        run: git diff --name-status "$BASE...$HEAD" | scripts/tenant-paths.sh "$AUTHOR"
+        run: git -c core.quotePath=false diff --name-status "$BASE...$HEAD" | scripts/tenant-paths.sh "$AUTHOR" "$PUSHER"
 
   gitleaks:
     runs-on: ubuntu-latest

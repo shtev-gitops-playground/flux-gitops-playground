@@ -1,0 +1,44 @@
+# Everyone shares one small server, so each area gets a fair slice of it.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: fair-share
+  namespace: play-elr143
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: 500m
+    requests.memory: 512Mi
+    limits.memory: 1Gi
+    requests.ephemeral-storage: 1Gi
+    limits.ephemeral-storage: 2Gi
+    persistentvolumeclaims: "2"
+    requests.storage: 2Gi
+---
+# Defaults for containers that don't say what they need, so they fit in the quota above.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+  namespace: play-elr143
+spec:
+  limits:
+    - type: Container
+      defaultRequest: { cpu: 10m, memory: 32Mi, ephemeral-storage: 64Mi }
+      default: { memory: 128Mi, ephemeral-storage: 256Mi }
+---
+# Only your own pods and the ingress controller (Traefik, in kube-system) can reach your pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate
+  namespace: play-elr143
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system

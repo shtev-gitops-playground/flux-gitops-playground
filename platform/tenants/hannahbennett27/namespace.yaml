@@ -4,3 +4,9 @@ metadata:
   name: play-hannahbennett27
   labels:
     playground.shtev.dev/tenant: hannahbennett27
+    # Pod Security: refuse anything that could reach the node (privileged, host paths, host
+    # network). "restricted" is only a warning, so ordinary images like nginx still run.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest

@@ -1,0 +1,36 @@
+# Each player's image sync (service account tenant-images-<you>) may only manage the
+# ImagePolicy <you>-demo-app, and only for tags starting "<you>-". Otherwise one player
+# could take over another's policy and choose what runs in their area.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: tenant-image-policies
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [image.toolkit.fluxcd.io]
+        apiVersions: ["*"]
+        operations: [CREATE, UPDATE, DELETE]
+        resources: [imagepolicies]
+  matchConditions:
+    - name: tenant-image-sync
+      expression: "request.userInfo.username.startsWith('system:serviceaccount:flux-system:tenant-images-')"
+  variables:
+    - name: tenant
+      expression: "request.userInfo.username.substring(size('system:serviceaccount:flux-system:tenant-images-'))"
+  validations:
+    - expression: "request.name == variables.tenant + '-demo-app'"
+      messageExpression: "'Your ImagePolicy must be called ' + variables.tenant + '-demo-app'"
+    - expression: >-
+        request.operation == 'DELETE' ||
+        (has(object.spec.filterTags) && object.spec.filterTags.pattern.startsWith('^' + variables.tenant + '-'))
+      messageExpression: "'filterTags.pattern must start with ^' + variables.tenant + '- (only your own releases)'"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: tenant-image-policies
+spec:
+  policyName: tenant-image-policies
+  validationActions: [Deny]
