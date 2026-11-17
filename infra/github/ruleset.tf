@@ -1,5 +1,9 @@
 # Rules for main: changes arrive by PR, required checks must pass, and anything outside
 # tenants/ needs a code owner's (Steve's) review. See .github/CODEOWNERS.
+locals {
+  github_actions_app_id = 15368 # the GitHub Actions app, the same on every github.com account
+}
+
 resource "github_repository_ruleset" "main" {
   name        = "main"
   repository  = github_repository.playground.name
@@ -37,12 +41,16 @@ resource "github_repository_ruleset" "main" {
     }
 
     # Not "checks": exercise 6 is merging a broken manifest on purpose and watching Flux report it.
+    # integration_id pins each check to GitHub Actions, so nobody can post a fake "success"
+    # status for it through the API.
     required_status_checks {
       required_check {
-        context = "tenant-paths"
+        context        = "tenant-paths"
+        integration_id = local.github_actions_app_id
       }
       required_check {
-        context = "gitleaks"
+        context        = "gitleaks"
+        integration_id = local.github_actions_app_id
       }
     }
   }
