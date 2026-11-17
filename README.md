@@ -7,7 +7,8 @@ Git commit, and how a shared cluster keeps several people out of each other's wa
 
 If you've been invited, you get:
 
-- a login to the cluster with **your GitHub account** (no keys or passwords to look after)
+- a login to the cluster with **your GitHub account** (no keys or passwords to look after), for
+  `kubectl` and the `flux` CLI
 - **read-only access to everything**, so you can poke around Flux's own objects
 - **your own namespace** `play-<you>` and folder `tenants/<you>/`, where your PRs merge without review
 - **a release button** that publishes a new version of a demo app, which Flux then rolls out to
@@ -16,7 +17,7 @@ If you've been invited, you get:
 ## Getting started
 
 1. Accept the invitation to the [`shtev-gitops-playground`](https://github.com/shtev-gitops-playground) GitHub org.
-2. Follow [docs/setup.md](docs/setup.md) to install `kubectl` and log in (WSL, Linux or macOS).
+2. Follow [docs/setup.md](docs/setup.md) to install `kubectl` and `flux` and log in (WSL, Linux or macOS).
 3. Work through [docs/exercises.md](docs/exercises.md). [docs/how-it-works.md](docs/how-it-works.md)
    explains each moving part when you want the detail.
 

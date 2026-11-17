@@ -1,7 +1,7 @@
 # Setup
 
-You need `kubectl` and its login plugin, `kubelogin`. The same steps work on **WSL**, **Linux** and
-**macOS**. You also need `git`, `curl` and `unzip`.
+You need `kubectl`, its login plugin `kubelogin`, and the `flux` CLI. The same steps work on **WSL**,
+**Linux** and **macOS**. You also need `git`, `curl`, `unzip` and `tar`.
 
 Before you start, accept the invitation to the
 [`shtev-gitops-playground`](https://github.com/shtev-gitops-playground) org. Steve adds you to the
@@ -22,7 +22,8 @@ cd flux-gitops-playground
 bash scripts/install-tools.sh
 ```
 
-This puts `kubectl` and `kubectl-oidc_login` in `~/.local/bin`, and checks their checksums. If it
+This puts `kubectl`, `kubectl-oidc_login` and `flux` in `~/.local/bin`, and checks their checksums.
+`flux` matches the version running on the cluster. If it
 tells you to add `~/.local/bin` to your `PATH`, do that and open a new terminal.
 
 Already have a recent `kubectl`? The script installs its own copy into `~/.local/bin`, which is fine
@@ -39,7 +40,7 @@ bash scripts/install-tools.sh
 or Homebrew:
 
 ```bash
-brew install kubectl int128/kubelogin/kubelogin
+brew install kubectl int128/kubelogin/kubelogin fluxcd/tap/flux
 ```
 
 Check it worked:
@@ -47,6 +48,7 @@ Check it worked:
 ```bash
 kubectl version --client
 kubectl oidc-login --version
+flux --version
 ```
 
 ## 3. Point kubectl at the playground
@@ -74,6 +76,12 @@ you're done. You should see:
 ATTRIBUTE   VALUE
 Username    github:<your-login>
 Groups      [github:shtev-gitops-playground:players system:authenticated]
+```
+
+Then check Flux can see the cluster through your login:
+
+```bash
+flux check
 ```
 
 Your login lasts an hour and then renews itself quietly for up to a week of not using it. It's

@@ -58,7 +58,8 @@ kubectl -n play-<you> annotate gitrepository playground reconcile.fluxcd.io/requ
 kubectl -n play-<you> annotate kustomization app reconcile.fluxcd.io/requestedAt="$(date +%s)" --overwrite
 ```
 
-(That's all `flux reconcile` does under the hood.)
+That's all `flux reconcile kustomization app -n play-<you> --with-source` does under the hood. The
+`flux` CLI is a client for these objects, and the controllers do the work.
 
 ### What gets applied, in what order
 
