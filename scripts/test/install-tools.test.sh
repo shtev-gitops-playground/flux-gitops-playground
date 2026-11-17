@@ -13,6 +13,7 @@ for platform in linux/amd64 linux/arm64; do
       bash /repo/scripts/install-tools.sh
       ~/.local/bin/kubectl version --client
       PATH=\$HOME/.local/bin:\$PATH kubectl oidc-login --version
+      ~/.local/bin/flux --version
     "'
 done
 echo "install-tools: all platforms passed"

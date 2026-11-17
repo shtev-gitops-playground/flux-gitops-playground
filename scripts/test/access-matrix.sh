@@ -30,6 +30,7 @@ expect yes "get flux-system pods"       -- get pods -n flux-system "${player[@]}
 expect yes "read flux-system logs"      -- get pods/log -n flux-system "${player[@]}"
 expect yes "list events"                -- list events -A "${player[@]}"
 expect yes "list ImagePolicies"         -- list imagepolicies.image.toolkit.fluxcd.io -A "${player[@]}"
+expect yes "list CRDs (flux check)"     -- list customresourcedefinitions.apiextensions.k8s.io "${player[@]}"
 expect no  "get flux-system secrets"    -- get secrets -n flux-system "${player[@]}"
 expect no  "list all secrets"           -- list secrets -A "${player[@]}"
 expect no  "create pods in flux-system" -- create pods -n flux-system "${player[@]}"

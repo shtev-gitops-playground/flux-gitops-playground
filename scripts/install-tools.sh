@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Installs kubectl and the kubelogin plugin (kubectl oidc-login) into ~/.local/bin.
-# Works the same on WSL, Linux and macOS. Needs: curl, unzip.
+# Installs kubectl, the kubelogin plugin (kubectl oidc-login) and the flux CLI into ~/.local/bin.
+# Works the same on WSL, Linux and macOS. Needs: curl, unzip, tar.
 #   bash scripts/install-tools.sh
 set -euo pipefail
 
 KUBECTL_VERSION=v1.37.2
 KUBELOGIN_VERSION=v1.36.4
+FLUX_VERSION=2.10.0   # match the cluster's Flux
 BIN_DIR=${BIN_DIR:-$HOME/.local/bin}
 
 case "$(uname -s)" in
@@ -19,7 +20,7 @@ case "$(uname -m)" in
   *) echo "Unsupported CPU: $(uname -m)" >&2; exit 1 ;;
 esac
 
-for tool in curl unzip; do
+for tool in curl unzip tar; do
   command -v "$tool" >/dev/null || { echo "Please install $tool first." >&2; exit 1; }
 done
 
@@ -53,7 +54,15 @@ unzip -q -o "$tmp/$zip" kubelogin -d "$tmp"
 # kubectl finds plugins by name: kubectl-oidc_login becomes "kubectl oidc-login".
 install -m 0755 "$tmp/kubelogin" "$BIN_DIR/kubectl-oidc_login"
 
-echo "Done: $BIN_DIR/kubectl and $BIN_DIR/kubectl-oidc_login"
+echo "Installing flux $FLUX_VERSION ($os/$arch)"
+tgz=flux_${FLUX_VERSION}_${os}_${arch}.tar.gz
+base=https://github.com/fluxcd/flux2/releases/download/v$FLUX_VERSION
+curl -fsSL -o "$tmp/$tgz" "$base/$tgz"
+verify "$tmp/$tgz" "$(curl -fsSL "$base/flux_${FLUX_VERSION}_checksums.txt" | awk -v f="$tgz" '$2 == f {print $1}')"
+tar -xzf "$tmp/$tgz" -C "$tmp" flux
+install -m 0755 "$tmp/flux" "$BIN_DIR/flux"
+
+echo "Done: $BIN_DIR/kubectl, $BIN_DIR/kubectl-oidc_login and $BIN_DIR/flux"
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
   *) echo "Add $BIN_DIR to your PATH: put  export PATH=\"$BIN_DIR:\$PATH\"  in ~/.bashrc (or ~/.zshrc on a Mac), then open a new terminal." ;;

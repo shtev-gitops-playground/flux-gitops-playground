@@ -30,6 +30,10 @@ rules:
       - image.toolkit.fluxcd.io
     resources: ["*"]
     verbs: [get, list, watch]
+  # Type definitions only (no data), so `flux check` can confirm Flux's CRDs are installed.
+  - apiGroups: [apiextensions.k8s.io]
+    resources: [customresourcedefinitions]
+    verbs: [get, list, watch]
   # Certificates, so you can see why your HTTPS isn't ready yet.
   - apiGroups: [cert-manager.io, acme.cert-manager.io]
     resources: ["*"]
